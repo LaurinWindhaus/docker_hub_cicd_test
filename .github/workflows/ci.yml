@@ -22,6 +22,8 @@ jobs:
     - name: Build Docker image
       run: docker build . -t my-node-app:latest
 
-    - name: Push Docker image
+    - name: Tag Docker image
       run: docker tag my-node-app:latest ${{ secrets.DOCKER_USERNAME }}/test_repo:latest
+
+    - name: Push Docker image
       run: docker push ${{ secrets.DOCKER_USERNAME }}/test_repo:latest
