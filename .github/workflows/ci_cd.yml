@@ -21,7 +21,7 @@ jobs:
         password: ${{ secrets.TOKEN_CONTAINER_REGISTRY_GITHUB }}
 
     - name: Build Docker image
-      run: docker build . -t ghcr.io/${{ github.repository_owner }}/my-node-app:latest
+      run: docker build . -t ghcr.io/laurinwindhaus/my-node-app:latest
 
     - name: Push Docker image
-      run: docker push ghcr.io/${{ github.repository_owner }}/my-node-app:latest
+      run: docker push ghcr.io/laurinwindhaus/my-node-app:latest
