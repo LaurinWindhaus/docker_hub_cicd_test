@@ -1,0 +1,64 @@
+pipeline {
+    agent any
+    tools {
+        nodejs "NodeJS 20.17.0"
+    }
+
+    environment {
+        DOCKER_REGISTRY = 'ghcr.io'
+        DOCKER_IMAGE = 'ghcr.io/laurinwindhaus/my-node-app'
+        GHCR_TOKEN = credentials('GHCR_TOKEN')
+        SSH_USER = 'adminpp'
+        SSH_HOST = 'ppdedocker3.ppdom01.poeppelmann.com'
+        GHCR_TOKEN_READ = credentials('GHCR_TOKEN_READ')
+        SUDO_PASSWORD = credentials('SUDO_PASSWORD')
+    }
+
+    stages {
+        stage("Build Express API") {
+            steps {
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/LaurinWindhaus/docker_hub_cicd_test.git']])
+                sh 'npm install'
+            }
+        }
+        
+        stage("Run Tests") {
+            steps {
+                script {
+                    sh "chmod +x node_modules/.bin/jest"
+                    def result = sh(script: 'npm test', returnStatus: true)
+                    if (result != 0) {
+                        error "Tests failed!"
+                    }
+                }
+            }
+        }
+
+        stage("Build Docker Image") {
+            steps {
+                script {
+                    sh "docker build -t ${DOCKER_IMAGE}:latest ."
+                }
+            }
+        }
+
+        stage("Push Docker Image to GHCR") {
+            steps {
+                script {
+                    sh 'echo ${GHCR_TOKEN} | docker login ${DOCKER_REGISTRY} -u laurinwindhaus --password-stdin'
+                    sh "docker push ${DOCKER_IMAGE}:latest"
+                }
+            }
+        }
+
+        stage("Deploy Updated Container") {
+            steps {
+                script {
+                    sh "echo ${GHCR_TOKEN} | docker login ${DOCKER_REGISTRY} -u laurinwindhaus --password-stdin"
+                    sh "ssh ${SSH_USER}@${SSH_HOST} 'cd /home/adminpp/docker_script/ppdedocker3_01_test_project && echo \"${SUDO_PASSWORD}\" | sudo -S docker-compose pull'"
+                    sh "ssh ${SSH_USER}@${SSH_HOST} 'cd /home/adminpp/docker_script/ppdedocker3_01_test_project && echo \"${SUDO_PASSWORD}\" | sudo -S docker-compose up -d --force-recreate'"
+                }
+            }
+        }
+    }
+}
