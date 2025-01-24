@@ -1,0 +1,7 @@
+services:
+  my-node-app:
+    image: ghcr.io/laurinwindhaus/my-node-app:latest
+    container_name: my-node-app-container
+    ports:
+      - "3000:3000" 
+    restart: unless-stopped
