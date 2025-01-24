@@ -3,7 +3,7 @@ const app = express();
 const port = 3000;
 
 const calculateSum = (num1, num2) => {
-  return num1 + num2;
+  return num1 - num2;
 };
 
 app.get('/calc', (req, res) => {
